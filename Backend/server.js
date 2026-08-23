@@ -19,7 +19,7 @@ app.use(helmet({
 }));
 
 // 2. KEAMANAN CORS (Membatasi hanya domain frontend Anda yang boleh mengakses API)
-const allowedOrigins = ['http://localhost:5173', 'http://localhost:3000']; // Sesuaikan dengan URL React Anda
+const allowedOrigins = ['http://localhost:5173', 'https://kelurahan-mallawa.vercel.app/']; // Sesuaikan dengan URL React Anda
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
