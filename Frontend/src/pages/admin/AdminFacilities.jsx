@@ -49,7 +49,7 @@ export default function AdminFacilities() {
 
   const fetchFacilities = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/facilities');
+      const response = await fetch('https://web-kelurahan-production.up.railway.app/api/facilities');
       if (response.ok) {
         const data = await response.json();
         setFacilities(data);
