@@ -13,13 +13,13 @@ const newsRoutes = require('./routes/news');
 
 const app = express();
 
-// 1. KEAMANAN HEADER (Mengizinkan media & gambar /uploads dibaca lintas domain)
+// 1. KEAMANAN HEADER
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
   crossOriginEmbedderPolicy: false
 }));
 
-// 2. KEAMANAN CORS (Universal handler untuk semua metode HTTP termasuk preflight OPTIONS)
+// 2. KEAMANAN CORS (Langsung izinkan semua asal domain tanpa fungsi callback/error)
 app.use(cors({
   origin: true,
   credentials: true,
@@ -33,7 +33,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // 4. RATE LIMITING
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 menit
+  windowMs: 15 * 60 * 1000,
   max: 200,
   message: 'Terlalu banyak permintaan dari IP ini, silakan coba lagi nanti.'
 });
@@ -52,7 +52,7 @@ app.use('/api/letters', letterRoutes);
 app.use('/api/facilities', facilityRoutes);
 app.use('/api/news', newsRoutes);
 
-// 7. SERVING STATIC FILES (Menambahkan Header Akses Publik Khusus Folder Uploads)
+// 7. SERVING STATIC FILES
 app.use('/uploads', express.static(uploadDir, {
   setHeaders: (res) => {
     res.set('Access-Control-Allow-Origin', '*');
