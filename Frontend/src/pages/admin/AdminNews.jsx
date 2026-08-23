@@ -41,7 +41,7 @@ export default function AdminNews() {
 
   const fetchNews = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/news');
+      const response = await fetch('https://web-kelurahan-production.up.railway.app/api/news');
       if (response.ok) {
         const data = await response.json();
         setNewsList(data);
