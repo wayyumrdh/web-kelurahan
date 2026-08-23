@@ -192,7 +192,7 @@ export default function Letters() {
         }
       });
 
-      const response = await fetch('http://localhost:5000/api/letters', {
+      const response = await fetch('https://web-kelurahan-production.up.railway.app/api/letters', {
         method: 'POST',
         body: bodyData
       });
