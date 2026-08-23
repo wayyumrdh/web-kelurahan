@@ -1,14 +1,14 @@
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise'); // Wajib gunakan /promise
 
 const pool = mysql.createPool({
-  host: 'mysql.railway.internal',
-  user: 'root',
-  password: 'etzLwtyzECSSGFqTiXujImSEdJtDFJwW',
-  database: 'railway',
-  port: 3306,
+  host: process.env.MYSQLHOST || 'localhost',
+  user: process.env.MYSQLUSER || 'root',
+  password: process.env.MYSQLPASSWORD || '',
+  database: process.env.MYSQLDATABASE || 'railway',
+  port: process.env.MYSQLPORT || 3306,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
 });
 
-module.exports = pool.promise();
+module.exports = pool;
