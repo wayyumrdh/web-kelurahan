@@ -4,7 +4,7 @@ import { motion } from 'motion/react';
 import { ArrowRight, Lock } from 'lucide-react';
 import { villageData } from '../../data/mockData';
 
-const LOGO_BARRU = "http://localhost:5000/uploads/1785781903565-303426076-Kabupaten_Barru.png";
+const LOGO_BARRU = "https://web-kelurahan-production.up.railway.app/uploads/1785781903565-303426076-Kabupaten_Barru.png";
 
 // Varian animasi untuk stagger konten utama
 const containerVariants = {
@@ -32,7 +32,7 @@ export default function Welcome() {
       {/* Background Gambar Suasana Kelurahan — zoom halus otomatis */}
       <div className="absolute inset-0 z-0">
         <motion.img
-          src="http://localhost:5000/uploads/1785776927649-116932223.jpeg"
+          src="https://web-kelurahan-production.up.railway.app/uploads/1785776927649-116932223.jpeg"
           alt="Kelurahan Mallawa"
           className="w-full h-full object-cover opacity-35"
           initial={{ scale: 1.15 }}
