@@ -22,10 +22,11 @@ export default function Facilities() {
   const fetchFacilities = async () => {
     try {
       const response = await fetch('https://web-kelurahan-production.up.railway.app/api/facilities');
-      if (response.ok) {
-        const data = await response.json();
-        setFacilitiesData(data);
+      if (!response.ok) {
+        throw new Error(`Server Error: ${response.status}`);
       }
+      const data = await response.json();
+      setFacilitiesData(data);
     } catch (error) {
       console.error('Gagal mengambil data fasilitas:', error);
     } finally {
@@ -34,8 +35,9 @@ export default function Facilities() {
   };
 
   const filteredFacilities = facilitiesData.filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          item.address.toLowerCase().includes(searchQuery.toLowerCase());
+    const name = item.name ? item.name.toLowerCase() : '';
+    const address = item.address ? item.address.toLowerCase() : '';
+    const matchesSearch = name.includes(searchQuery.toLowerCase()) || address.includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'Semua' || item.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
@@ -118,8 +120,12 @@ export default function Facilities() {
                 <div>
                   <div className="relative h-48 bg-slate-200 overflow-hidden">
                     <img 
-                      src={item.image || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=600'} 
-                      alt={item.name} 
+                      src={
+                        item.image
+                          ? item.image.replace('http://localhost:5000', 'https://web-kelurahan-production.up.railway.app')
+                          : 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=600'
+                      } 
+                      alt={item.name || 'Fasilitas'} 
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                     />
                     <span className="absolute top-3 left-3 bg-blue-900/90 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/20">
@@ -141,7 +147,7 @@ export default function Facilities() {
 
                 <div className="p-5 pt-0">
                   <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.name + ' ' + item.address)}`}
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((item.name || '') + ' ' + (item.address || ''))}`}
                     target="_blank"
                     rel="noreferrer"
                     className="w-full bg-slate-100 hover:bg-blue-50 text-blue-900 hover:text-blue-700 text-xs font-semibold py-2.5 rounded-xl border border-slate-200 transition flex items-center justify-center gap-1.5"
