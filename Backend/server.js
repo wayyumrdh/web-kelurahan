@@ -2,8 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-const helmet = require('helmet'); // Opsional tapi sangat disarankan (npm install helmet)
-const rateLimit = require('express-rate-limit'); // Opsional (npm install express-rate-limit)
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 const authRoutes = require('./routes/auth');
 const profileRoutes = require('./routes/profile');
@@ -13,16 +13,24 @@ const newsRoutes = require('./routes/news');
 
 const app = express();
 
-// 1. KEAMANAN HEADER (Sembunyikan identitas Express & cegah serangan XSS)
+// 1. KEAMANAN HEADER (Mengizinkan gambar /uploads diakses oleh domain luar/Vercel)
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" } // Agar gambar di folder /uploads tetap bisa diakses frontend
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginEmbedderPolicy: false
 }));
 
-// 2. KEAMANAN CORS (Membatasi hanya domain frontend Anda yang boleh mengakses API)
-const allowedOrigins = ['http://localhost:5173', 'https://kelurahan-mallawa.vercel.app/']; // Sesuaikan dengan URL React Anda
+// 2. KEAMANAN CORS (Mengizinkan Localhost, Domain Vercel, dan Subdomain Vercel)
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:5500',
+  'https://kelurahan-mallawa.vercel.app'
+];
+
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    // Mengizinkan jika tanpa origin (Postman/Apps) atau jika terdaftar di allowedOrigins / *.vercel.app
+    if (!origin || allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app')) {
       callback(null, true);
     } else {
       callback(new Error('Akses diblokir oleh kebijakan CORS'));
@@ -31,19 +39,19 @@ app.use(cors({
   credentials: true
 }));
 
-// 3. PEMBATASAN UKURAN BODY (Mencegah serangan Denial of Service / Payload Besar)
+// 3. PEMBATASAN UKURAN BODY
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// 4. RATE LIMITING (Mencegah Spam/Brute Force pada Endpoint Sensitif)
+// 4. RATE LIMITING
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 menit
-  max: 200, // Batas maksimal 200 request per IP dalam 15 menit
+  max: 200, // Maksimal 200 request per IP
   message: 'Terlalu banyak permintaan dari IP ini, silakan coba lagi nanti.'
 });
 app.use('/api/', limiter);
 
-// 5. MEMASTIKAN FOLDER UPLOADS ADA (Pencegahan Crash)
+// 5. MEMASTIKAN FOLDER UPLOADS ADA
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
@@ -56,10 +64,14 @@ app.use('/api/letters', letterRoutes);
 app.use('/api/facilities', facilityRoutes);
 app.use('/api/news', newsRoutes);
 
-// 7. SERVING STATIC FILES (FOLDER UPLOADS)
-app.use('/uploads', express.static(uploadDir));
+// 7. SERVING STATIC FILES (Menambahkan Header Akses Publik Khusus Folder Uploads)
+app.use('/uploads', express.static(uploadDir, {
+  setHeaders: (res) => {
+    res.set('Access-Control-Allow-Origin', '*');
+  }
+}));
 
-// 8. GLOBAL ERROR HANDLER (Mencegah kebocoran stack trace ke pengguna)
+// 8. GLOBAL ERROR HANDLER
 app.use((err, req, res, next) => {
   console.error('Unhandled Error:', err.stack);
   res.status(err.status || 500).json({
@@ -67,7 +79,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 9. PORT DINAMIS (Penting untuk Deployment)
+// 9. PORT DINAMIS
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server Express berjalan secara aman di port ${PORT}`);
