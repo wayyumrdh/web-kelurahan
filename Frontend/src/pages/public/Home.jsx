@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { villageData, servicesData } from '../../data/mockData';
 
-const HERO_BANNER_IMG = "http://localhost:5000/uploads/1785776927649-116932223.jpeg"; 
+const HERO_BANNER_IMG = "https://web-kelurahan-production.up.railway.app/uploads/1785776927649-116932223.jpeg"; 
 
 // Varian dasar: fade + naik sedikit, dipakai berulang untuk tiap section
 const fadeUp = {
