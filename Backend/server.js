@@ -13,28 +13,19 @@ const newsRoutes = require('./routes/news');
 
 const app = express();
 
-// 1. KEAMANAN HEADER (Mengizinkan gambar /uploads diakses oleh domain luar/Vercel)
+// 1. KEAMANAN HEADER (Mengizinkan media & gambar /uploads dibaca lintas domain)
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
   crossOriginEmbedderPolicy: false
 }));
 
-// 2. KEAMANAN CORS (Mengizinkan Localhost, Domain Vercel, dan Subdomain Vercel)
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'http://127.0.0.1:5500',
-  'https://kelurahan-mallawa.vercel.app'
-];
-
+// 2. KEAMANAN CORS (Universal handler untuk semua metode HTTP termasuk preflight OPTIONS)
 app.use(cors({
   origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
-
-app.options('*', cors());
 
 // 3. PEMBATASAN UKURAN BODY
 app.use(express.json({ limit: '10mb' }));
@@ -43,7 +34,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // 4. RATE LIMITING
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 menit
-  max: 200, // Maksimal 200 request per IP
+  max: 200,
   message: 'Terlalu banyak permintaan dari IP ini, silakan coba lagi nanti.'
 });
 app.use('/api/', limiter);
@@ -71,6 +62,7 @@ app.use('/uploads', express.static(uploadDir, {
 // 8. GLOBAL ERROR HANDLER
 app.use((err, req, res, next) => {
   console.error('Unhandled Error:', err.stack);
+  res.header("Access-Control-Allow-Origin", "*");
   res.status(err.status || 500).json({
     message: err.message || 'Terjadi kesalahan internal pada server.',
   });
