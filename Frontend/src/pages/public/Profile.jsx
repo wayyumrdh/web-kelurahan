@@ -87,7 +87,7 @@ export default function Profile() {
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/profile');
+        const response = await fetch('https://web-kelurahan-production.up.railway.app/api/profile');
         if (response.ok) {
           const data = await response.json();
           setProfile({
