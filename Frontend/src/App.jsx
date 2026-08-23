@@ -21,7 +21,7 @@ import AdminFacilities from './pages/admin/AdminFacilities';
 import AdminNews from './pages/admin/AdminNews';
 
 // URL Gambar Logo dari Folder uploads Backend Express
-const LOGO_BARRU = "http://localhost:5000/uploads/1785781903565-303426076-Kabupaten_Barru.png";
+const LOGO_BARRU = "https://web-kelurahan-production.up.railway.app/uploads/1785781903565-303426076-Kabupaten_Barru.png";
 
 // Layout Khusus Portal Warga Publik
 function MainLayout({ children }) {
