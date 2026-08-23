@@ -1,11 +1,11 @@
 const mysql = require('mysql2');
 
 const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: '', // Kosongkan karena XAMPP tidak pakai password
-  database: 'db_kelurahan_mallawa',
-  port: 3307,   // Sesuaikan dengan port MySQL di XAMPP Control Panel (default 3306)
+  host: process.env.MYSQLHOST || 'localhost',
+  user: process.env.MYSQLUSER || 'root',
+  password: process.env.MYSQLPASSWORD || '',
+  database: process.env.MYSQLDATABASE || 'db_kelurahan_mallawa',
+  port: process.env.MYSQLPORT || 3307,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
