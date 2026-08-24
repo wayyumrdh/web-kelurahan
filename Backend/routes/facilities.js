@@ -26,10 +26,23 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Helper untuk mendapatkan Base URL (Railway / Localhost)
+// Helper untuk mendapatkan Base URL Publik yang Aman (Railway / Localhost)
 const getBaseUrl = (req) => {
-  return `${req.protocol}://${req.get('host')}`;
+  // 1. Cek domain publik Railway jika tersedia di Environment Variable
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+    return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+  }
+  
+  const host = req.get('host');
+  
+  // 2. Jika diakses dari domain produksi Railway, paksa protokol HTTPS
+  if (host && host.includes('railway.app')) {
+    return `https://${host}`;
+  }
+  
+  // 3. Fallback untuk pengujian lokal (localhost)
+  return `${req.protocol}://${host}`;
 };
-
 // 1. GET: Ambil semua data fasilitas
 router.get('/', async (req, res) => {
   try {
