@@ -12,6 +12,9 @@ import {
   CheckCircle2 
 } from 'lucide-react';
 
+// BASE API URL RAILWAY
+const API_BASE_URL = 'https://web-kelurahan-production.up.railway.app';
+
 export default function AdminNews() {
   const [newsList, setNewsList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +44,7 @@ export default function AdminNews() {
 
   const fetchNews = async () => {
     try {
-      const response = await fetch('https://web-kelurahan-production.up.railway.app/api/news');
+      const response = await fetch(`${API_BASE_URL}/api/news`);
       if (response.ok) {
         const data = await response.json();
         setNewsList(data);
@@ -78,8 +81,9 @@ export default function AdminNews() {
     setEditingId(item.id);
     resetUploadState();
     if (item.image) {
-      setPreview(item.image);
-      setDriveUrl(item.image);
+      const cleanImageUrl = item.image.replace('http://localhost:5000', API_BASE_URL);
+      setPreview(cleanImageUrl);
+      setDriveUrl(cleanImageUrl);
     }
     setFormData({
       title: item.title,
@@ -90,7 +94,7 @@ export default function AdminNews() {
     setIsModalOpen(true);
   };
 
-  // --- HANDLER UPLOAD GAMBAR (DRAG & DROP, BROWSE, DRIVE) ---
+  // --- HANDLER UPLOAD GAMBAR ---
   const handleDragOver = (e) => {
     e.preventDefault();
     setIsDragging(true);
@@ -128,12 +132,11 @@ export default function AdminNews() {
     e.preventDefault();
     if (!inputDriveUrl.trim()) return;
 
-    // Ekstrak ID File Google Drive jika pengguna menempelkan link Google Drive
     const match = inputDriveUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
     let directUrl = inputDriveUrl;
 
     if (match && match[1]) {
-      directUrl = `https://lh3.googleusercontent.com/d/${match[1]}`;
+      directUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
     }
 
     setDriveUrl(directUrl);
@@ -161,9 +164,10 @@ export default function AdminNews() {
       bodyData.append('existingImage', driveUrl);
     }
 
+    // Menggunakan API_BASE_URL Railway
     const url = editingId 
-      ? `http://localhost:5000/api/news/${editingId}`
-      : 'http://localhost:5000/api/news';
+      ? `${API_BASE_URL}/api/news/${editingId}`
+      : `${API_BASE_URL}/api/news`;
     const method = editingId ? 'PUT' : 'POST';
 
     try {
@@ -183,10 +187,11 @@ export default function AdminNews() {
     }
   };
 
+  // Menggunakan API_BASE_URL Railway untuk DELETE
   const handleDelete = async (id) => {
     if (!window.confirm('Apakah Anda yakin ingin menghapus berita ini?')) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/news/${id}`, { method: 'DELETE' });
+      const response = await fetch(`${API_BASE_URL}/api/news/${id}`, { method: 'DELETE' });
       if (response.ok) fetchNews();
     } catch (error) {
       console.error('Error deleting news:', error);
@@ -213,7 +218,7 @@ export default function AdminNews() {
 
         <button
           onClick={handleOpenAdd}
-          className="bg-blue-900 hover:bg-blue-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 transition shadow-sm"
+          className="bg-blue-900 hover:bg-blue-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 transition shadow-sm cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Tambah Berita Baru</span>
@@ -253,7 +258,11 @@ export default function AdminNews() {
                   <tr key={item.id} className="hover:bg-slate-50">
                     <td className="p-3">
                       {item.image ? (
-                        <img src={item.image} alt={item.title} className="w-14 h-10 object-cover rounded-lg border bg-slate-100" />
+                        <img 
+                          src={item.image.replace('http://localhost:5000', API_BASE_URL)} 
+                          alt={item.title} 
+                          className="w-14 h-10 object-cover rounded-lg border bg-slate-100" 
+                        />
                       ) : (
                         <div className="w-14 h-10 bg-slate-200 text-slate-500 rounded-lg flex items-center justify-center font-bold text-[10px]">Teks</div>
                       )}
@@ -269,14 +278,14 @@ export default function AdminNews() {
                       <div className="flex justify-center gap-2">
                         <button 
                           onClick={() => handleOpenEdit(item)} 
-                          className="p-2 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg transition"
+                          className="p-2 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg transition cursor-pointer"
                           title="Edit"
                         >
                           <Edit3 className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => handleDelete(item.id)} 
-                          className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition"
+                          className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition cursor-pointer"
                           title="Hapus"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -297,7 +306,7 @@ export default function AdminNews() {
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 relative max-h-[90vh] overflow-y-auto">
             <button 
               onClick={() => setIsModalOpen(false)} 
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -417,7 +426,7 @@ export default function AdminNews() {
                       <button
                         type="button"
                         onClick={handleDriveSubmit}
-                        className="bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition"
+                        className="bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition cursor-pointer"
                       >
                         Gunakan
                       </button>
@@ -434,7 +443,7 @@ export default function AdminNews() {
                       <button
                         type="button"
                         onClick={handleClearImage}
-                        className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white p-1 rounded-full shadow transition"
+                        className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white p-1 rounded-full shadow transition cursor-pointer"
                         title="Hapus Gambar"
                       >
                         <X className="w-3.5 h-3.5" />
@@ -473,7 +482,7 @@ export default function AdminNews() {
               {/* SUBMIT BUTTON */}
               <button 
                 type="submit" 
-                className="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-2.5 rounded-xl transition mt-3 shadow-md"
+                className="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-2.5 rounded-xl transition mt-3 shadow-md cursor-pointer"
               >
                 Simpan Berita
               </button>
