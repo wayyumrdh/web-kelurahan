@@ -13,6 +13,8 @@ const newsRoutes = require('./routes/news');
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 // 1. KEAMANAN HEADER
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
