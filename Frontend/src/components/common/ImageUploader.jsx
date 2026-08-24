@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UploadCloud, HardDrive, CheckCircle2, Image as ImageIcon, X } from 'lucide-react';
 
 export default function ImageUploader({ onFileSelect, onDriveUrlSelect, currentPreview }) {
@@ -7,6 +7,20 @@ export default function ImageUploader({ onFileSelect, onDriveUrlSelect, currentP
   const [driveUrl, setDriveUrl] = useState('');
   const [preview, setPreview] = useState(currentPreview || null);
   const [selectedFileName, setSelectedFileName] = useState('');
+
+  // SINKRONISASI PREVIEW DARI PARENT COMPONENT (PENTING SAAT EDIT DATA)
+  useEffect(() => {
+    if (currentPreview) {
+      // Otomatis ubah localhost menjadi URL Railway jika ada data lama
+      const cleanUrl = currentPreview.replace(
+        'http://localhost:5000',
+        'https://web-kelurahan-production.up.railway.app'
+      );
+      setPreview(cleanUrl);
+    } else {
+      setPreview(null);
+    }
+  }, [currentPreview]);
 
   // 1. HANDLER DRAG & DROP
   const handleDragOver = (e) => {
@@ -39,7 +53,8 @@ export default function ImageUploader({ onFileSelect, onDriveUrlSelect, currentP
     }
     setSelectedFileName(file.name);
     setPreview(URL.createObjectURL(file));
-    onFileSelect(file); // Kirim file biner ke parent component
+    onFileSelect(file); // Kirim file biner ke parent
+    onDriveUrlSelect(''); // Kosongkan URL Drive
   };
 
   // 2. HANDLER GOOGLE DRIVE LINK
@@ -47,18 +62,19 @@ export default function ImageUploader({ onFileSelect, onDriveUrlSelect, currentP
     e.preventDefault();
     if (!driveUrl.trim()) return;
 
-    // Ekstrak File ID dari Link Google Drive (Contoh: https://drive.google.com/file/d/FILE_ID/view)
+    // Ekstrak File ID dari Link Google Drive
     const match = driveUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
     if (match && match[1]) {
       const fileId = match[1];
-      // Format Direct Image Link dari Google Drive Viewer
-      const directImageUrl = `https://lh3.googleusercontent.com/d/${fileId}`;
+      // Format Direct Image Link yang lebih stabil
+      const directImageUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
       setPreview(directImageUrl);
-      onDriveUrlSelect(directImageUrl); // Kirim URL direct drive ke parent
+      onDriveUrlSelect(directImageUrl); 
+      onFileSelect(null); // Kosongkan file lokal
     } else if (driveUrl.startsWith('http')) {
-      // Jika link biasa
       setPreview(driveUrl);
       onDriveUrlSelect(driveUrl);
+      onFileSelect(null);
     } else {
       alert('Format link Google Drive tidak valid!');
     }
@@ -167,7 +183,15 @@ export default function ImageUploader({ onFileSelect, onDriveUrlSelect, currentP
       {/* PRATINJAU (PREVIEW) GAMBAR */}
       {preview && (
         <div className="relative w-32 h-24 bg-slate-200 rounded-xl overflow-hidden border border-slate-300 group mt-2">
-          <img src={preview} alt="Pratinjau Foto" className="w-full h-full object-cover" />
+          <img 
+            src={preview} 
+            alt="Pratinjau Foto" 
+            className="w-full h-full object-cover" 
+            onError={(e) => {
+              // Fallback gambar default jika link salah / gagal muat
+              e.target.src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=600';
+            }}
+          />
           <button
             type="button"
             onClick={handleClear}
