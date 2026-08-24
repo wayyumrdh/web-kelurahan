@@ -25,6 +25,18 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// Helper untuk mendapatkan Base URL Publik (Railway / Localhost)
+const getBaseUrl = (req) => {
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+    return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+  }
+  const host = req.get('host');
+  if (host && host.includes('railway.app')) {
+    return `https://${host}`;
+  }
+  return `${req.protocol}://${host}`;
+};
+
 // 1. GET: Ambil semua pengajuan surat warga
 router.get('/', async (req, res) => {
   try {
@@ -32,7 +44,10 @@ router.get('/', async (req, res) => {
     res.json(rows);
   } catch (error) {
     console.error('Error GET Letters:', error);
-    res.status(500).json({ message: 'Terjadi kesalahan server saat mengambil data pengajuan surat.' });
+    res.status(500).json({ 
+      message: 'Terjadi kesalahan server saat mengambil data pengajuan surat.',
+      error: error.message 
+    });
   }
 });
 
@@ -53,7 +68,7 @@ router.post('/', upload.array('dokumenFiles'), async (req, res) => {
       parsedBerkas = berkas;
     }
 
-    // Jika ada file biner terunggah dari laptop, perbarui nilai nama file dengan URL server lokal
+    // Mengubah path file biner menjadi URL server publik dinamis
     if (req.files && req.files.length > 0) {
       let fileIndex = 0;
       parsedBerkas = parsedBerkas.map(item => {
@@ -62,7 +77,7 @@ router.post('/', upload.array('dokumenFiles'), async (req, res) => {
           fileIndex++;
           return {
             ...item,
-            name: `http://localhost:5000/uploads/${uploadedFile.filename}`
+            name: `${getBaseUrl(req)}/uploads/${uploadedFile.filename}`
           };
         }
         return item;
