@@ -17,6 +17,9 @@ import {
   Clock
 } from 'lucide-react';
 
+// BASE API URL RAILWAY
+const API_BASE_URL = 'https://web-kelurahan-production.up.railway.app';
+
 export default function AdminSurat() {
   const [suratList, setSuratList] = useState([]);
   const [selectedSurat, setSelectedSurat] = useState(null);
@@ -30,7 +33,7 @@ export default function AdminSurat() {
 
   const fetchSuratData = async () => {
     try {
-      const response = await fetch('https://web-kelurahan-production.up.railway.app/api/letters');
+      const response = await fetch(`${API_BASE_URL}/api/letters`);
       if (response.ok) {
         const data = await response.json();
         setSuratList(data);
@@ -53,10 +56,11 @@ export default function AdminSurat() {
     markAsContacted(item.id, true);
   };
 
+  // 1. DIBERSIHKAN: Menggunakan API_BASE_URL Railway
   const markAsContacted = async (id, contacted) => {
     setUpdatingContact(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/letters/${id}/contact`, {
+      const response = await fetch(`${API_BASE_URL}/api/letters/${id}/contact`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contacted })
@@ -306,12 +310,12 @@ export default function AdminSurat() {
                   return berkasItems.map((b, idx) => {
                     const fileNameOrUrl = b.name || '';
                     
-                    // PENANGANAN URL BERKAS (GOOGLE DRIVE VS UPLOADS EXPRESS)
+                    // 2. DIBERSIHKAN: Format URL Berkas Railway & Localhost Fallback
                     let fileUrl = '';
                     if (fileNameOrUrl.startsWith('http://') || fileNameOrUrl.startsWith('https://')) {
-                      fileUrl = fileNameOrUrl; // Link Google Drive
+                      fileUrl = fileNameOrUrl.replace('http://localhost:5000', API_BASE_URL);
                     } else if (fileNameOrUrl && fileNameOrUrl !== 'Belum diunggah') {
-                      fileUrl = `http://localhost:5000/uploads/${fileNameOrUrl}`; // File terunggah di Express
+                      fileUrl = `${API_BASE_URL}/uploads/${fileNameOrUrl}`;
                     }
 
                     return (
