@@ -13,6 +13,7 @@ const newsRoutes = require('./routes/news');
 
 const app = express();
 
+// WAJIB: Agar Express membaca protocol HTTPS dari Railway Proxy
 app.set('trust proxy', 1);
 
 // 1. KEAMANAN HEADER
@@ -21,7 +22,7 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 
-// 2. KEAMANAN CORS (Langsung izinkan semua asal domain tanpa fungsi callback/error)
+// 2. KEAMANAN CORS
 app.use(cors({
   origin: true,
   credentials: true,
