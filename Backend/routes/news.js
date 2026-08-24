@@ -5,13 +5,13 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Buat folder uploads otomatis jika belum ada
+// 1. Buat folder uploads otomatis jika belum ada
 const uploadDir = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Konfigurasi Multer
+// 2. Konfigurasi Multer
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
@@ -25,13 +25,29 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// Helper untuk mendapatkan Base URL Publik (Railway / Localhost)
+const getBaseUrl = (req) => {
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+    return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+  }
+  const host = req.get('host');
+  if (host && host.includes('railway.app')) {
+    return `https://${host}`;
+  }
+  return `${req.protocol}://${host}`;
+};
+
 // 1. GET: Ambil semua berita
 router.get('/', async (req, res) => {
   try {
     const [rows] = await db.query('SELECT * FROM news ORDER BY id DESC');
     res.json(rows);
   } catch (error) {
-    res.status(500).json({ message: 'Gagal mengambil data berita' });
+    console.error('Error GET News:', error);
+    res.status(500).json({ 
+      message: 'Gagal mengambil data berita',
+      error: error.message 
+    });
   }
 });
 
@@ -40,11 +56,9 @@ router.post('/', upload.single('imageFile'), async (req, res) => {
   try {
     const { title, date, summary, content, existingImage } = req.body;
     
-    // Jika upload file laptop, gunakan path uploads/
-    // Jika tidak ada file tetapi menggunakan Drive URL, gunakan existingImage
     let imagePath = null;
     if (req.file) {
-      imagePath = `http://localhost:5000/uploads/${req.file.filename}`;
+      imagePath = `${getBaseUrl(req)}/uploads/${req.file.filename}`;
     } else if (existingImage && existingImage !== 'undefined') {
       imagePath = existingImage;
     }
@@ -68,7 +82,7 @@ router.put('/:id', upload.single('imageFile'), async (req, res) => {
 
     let imagePath = null;
     if (req.file) {
-      imagePath = `http://localhost:5000/uploads/${req.file.filename}`;
+      imagePath = `${getBaseUrl(req)}/uploads/${req.file.filename}`;
     } else if (existingImage && existingImage !== 'undefined') {
       imagePath = existingImage;
     }
@@ -91,7 +105,8 @@ router.delete('/:id', async (req, res) => {
     await db.query('DELETE FROM news WHERE id = ?', [id]);
     res.json({ message: 'Berita berhasil dihapus' });
   } catch (error) {
-    res.status(500).json({ message: 'Gagal menghapus berita' });
+    console.error('Error DELETE News:', error);
+    res.status(500).json({ message: 'Gagal menghapus berita: ' + error.message });
   }
 });
 
