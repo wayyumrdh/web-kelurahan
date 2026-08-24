@@ -17,7 +17,6 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    // Bersihkan spasi dan karakter khusus dari nama asli file
     const cleanFileName = file.originalname.replace(/[^a-zA-Z0-9.]/g, '_');
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, uniqueSuffix + '-' + cleanFileName);
@@ -26,6 +25,11 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// Helper untuk mendapatkan Base URL (Railway / Localhost)
+const getBaseUrl = (req) => {
+  return `${req.protocol}://${req.get('host')}`;
+};
+
 // 1. GET: Ambil semua data fasilitas
 router.get('/', async (req, res) => {
   try {
@@ -33,7 +37,11 @@ router.get('/', async (req, res) => {
     res.json(rows);
   } catch (error) {
     console.error('Error GET Facilities:', error);
-    res.status(500).json({ message: 'Gagal mengambil data fasilitas' });
+    // MENAMPILKAN DETAIL ERROR ASLI MYSQL
+    res.status(500).json({ 
+      message: 'Gagal mengambil data fasilitas', 
+      error: error.message 
+    });
   }
 });
 
@@ -42,10 +50,9 @@ router.post('/', upload.single('imageFile'), async (req, res) => {
   try {
     const { name, address, category, existingImage } = req.body;
     
-    // Tentukan path gambar: Gunakan upload lokal ATAU link Google Drive ATAU null
     let imagePath = null;
     if (req.file) {
-      imagePath = `http://localhost:5000/uploads/${req.file.filename}`;
+      imagePath = `${getBaseUrl(req)}/uploads/${req.file.filename}`;
     } else if (existingImage && existingImage !== 'undefined') {
       imagePath = existingImage;
     }
@@ -69,7 +76,7 @@ router.put('/:id', upload.single('imageFile'), async (req, res) => {
 
     let imagePath = null;
     if (req.file) {
-      imagePath = `http://localhost:5000/uploads/${req.file.filename}`;
+      imagePath = `${getBaseUrl(req)}/uploads/${req.file.filename}`;
     } else if (existingImage && existingImage !== 'undefined') {
       imagePath = existingImage;
     }
