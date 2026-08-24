@@ -1,13 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const path = require('path');
+const fs = require('fs');
 const multer = require('multer');
 const db = require('../config/db');
+
+// Memastikan folder uploads ada
+const uploadDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 // --- KONFIGURASI UPLOAD FOTO STAF (MULTER) ---
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Memastikan file disimpan di folder uploads/
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -15,7 +22,6 @@ const storage = multer.diskStorage({
   }
 });
 
-// Middleware multer dengan batasan file maksimal 2 MB
 const upload = multer({
   storage,
   limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB
@@ -28,7 +34,19 @@ const upload = multer({
   }
 });
 
-// --- HELPER UNTUK AMAN SERIALLIZE JSON ---
+// Helper untuk mendapatkan Base URL Publik (Railway / Localhost)
+const getBaseUrl = (req) => {
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+    return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+  }
+  const host = req.get('host');
+  if (host && host.includes('railway.app')) {
+    return `https://${host}`;
+  }
+  return `${req.protocol}://${host}`;
+};
+
+// Helper untuk aman serialize JSON
 const safeStringify = (data) => {
   if (data === undefined || data === null) return '[]';
   return typeof data === 'string' ? data : JSON.stringify(data);
@@ -46,7 +64,10 @@ router.get('/', async (req, res) => {
     res.json(rows[0]);
   } catch (error) {
     console.error('Error GET Profile:', error);
-    res.status(500).json({ message: 'Terjadi kesalahan server saat mengambil data profil.' });
+    res.status(500).json({ 
+      message: 'Terjadi kesalahan server saat mengambil data profil.',
+      error: error.message 
+    });
   }
 });
 
@@ -87,7 +108,7 @@ router.put('/', async (req, res) => {
     res.json({ message: 'Profil kelurahan berhasil diperbarui!' });
   } catch (error) {
     console.error('Error PUT Profile:', error);
-    res.status(500).json({ message: 'Terjadi kesalahan server saat menyimpan profil.' });
+    res.status(500).json({ message: 'Terjadi kesalahan server saat menyimpan profil: ' + error.message });
   }
 });
 
@@ -112,7 +133,7 @@ router.post('/upload', (req, res) => {
     res.json({
       message: 'Foto aparatur berhasil diunggah',
       filename: req.file.filename,
-      url: `http://localhost:5000/uploads/${req.file.filename}`
+      url: `${getBaseUrl(req)}/uploads/${req.file.filename}`
     });
   });
 });
