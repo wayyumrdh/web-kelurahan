@@ -21,6 +21,9 @@ const categories = [
   'Usaha & Pertokoan'
 ];
 
+// BASE API URL RAILWAY
+const API_BASE_URL = 'https://web-kelurahan-production.up.railway.app';
+
 export default function AdminFacilities() {
   const [facilities, setFacilities] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,7 +39,7 @@ export default function AdminFacilities() {
   });
 
   // Image Upload State
-  const [activeTab, setActiveTab] = useState('local'); // 'local' atau 'drive'
+  const [activeTab, setActiveTab] = useState('local');
   const [selectedFile, setSelectedFile] = useState(null);
   const [driveUrl, setDriveUrl] = useState('');
   const [inputDriveUrl, setInputDriveUrl] = useState('');
@@ -49,7 +52,7 @@ export default function AdminFacilities() {
 
   const fetchFacilities = async () => {
     try {
-      const response = await fetch('https://web-kelurahan-production.up.railway.app/api/facilities');
+      const response = await fetch(`${API_BASE_URL}/api/facilities`);
       if (response.ok) {
         const data = await response.json();
         setFacilities(data);
@@ -72,8 +75,10 @@ export default function AdminFacilities() {
     setEditingId(item.id);
     resetUploadState();
     if (item.image) {
-      setPreview(item.image);
-      setDriveUrl(item.image);
+      // Bersihkan URL localhost jika telanjur ada di data lama
+      const cleanImageUrl = item.image.replace('http://localhost:5000', API_BASE_URL);
+      setPreview(cleanImageUrl);
+      setDriveUrl(cleanImageUrl);
     }
     setFormData({ name: item.name, address: item.address, category: item.category });
     setIsModalOpen(true);
@@ -88,7 +93,7 @@ export default function AdminFacilities() {
     setIsDragging(false);
   };
 
-  // --- HANDLER UPLOAD GAMBAR (DRAG & DROP, BROWSE, DRIVE) ---
+  // --- HANDLER UPLOAD GAMBAR ---
   const handleDragOver = (e) => {
     e.preventDefault();
     setIsDragging(true);
@@ -126,12 +131,11 @@ export default function AdminFacilities() {
     e.preventDefault();
     if (!inputDriveUrl.trim()) return;
 
-    // Ekstrak ID File Google Drive jika pengguna menempelkan link Google Drive
     const match = inputDriveUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
     let directUrl = inputDriveUrl;
 
     if (match && match[1]) {
-      directUrl = `https://lh3.googleusercontent.com/d/${match[1]}`;
+      directUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
     }
 
     setDriveUrl(directUrl);
@@ -153,16 +157,15 @@ export default function AdminFacilities() {
     bodyData.append('category', formData.category);
 
     if (selectedFile) {
-      // Jika mengunggah file lokal/drag&drop
       bodyData.append('imageFile', selectedFile);
     } else if (driveUrl) {
-      // Jika menggunakan link Google Drive atau URL
       bodyData.append('existingImage', driveUrl);
     }
 
+    // 1. DIBERSIHKAN: Menggunakan API_BASE_URL Railway
     const url = editingId 
-      ? `http://localhost:5000/api/facilities/${editingId}`
-      : 'http://localhost:5000/api/facilities';
+      ? `${API_BASE_URL}/api/facilities/${editingId}`
+      : `${API_BASE_URL}/api/facilities`;
     const method = editingId ? 'PUT' : 'POST';
 
     try {
@@ -182,10 +185,11 @@ export default function AdminFacilities() {
     }
   };
 
+  // 2. DIBERSIHKAN: Menggunakan API_BASE_URL Railway untuk DELETE
   const handleDelete = async (id) => {
     if (!window.confirm('Apakah Anda yakin ingin menghapus fasilitas ini?')) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/facilities/${id}`, { method: 'DELETE' });
+      const response = await fetch(`${API_BASE_URL}/api/facilities/${id}`, { method: 'DELETE' });
       if (response.ok) fetchFacilities();
     } catch (error) {
       console.error('Error deleting facility:', error);
@@ -212,7 +216,7 @@ export default function AdminFacilities() {
 
         <button
           onClick={handleOpenAdd}
-          className="bg-blue-900 hover:bg-blue-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 transition shadow-sm"
+          className="bg-blue-900 hover:bg-blue-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 transition shadow-sm cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Tambah Fasilitas Baru</span>
@@ -253,7 +257,7 @@ export default function AdminFacilities() {
                   <tr key={item.id} className="hover:bg-slate-50">
                     <td className="p-3">
                       <img 
-                        src={item.image || 'https://via.placeholder.com/100'} 
+                        src={item.image ? item.image.replace('http://localhost:5000', API_BASE_URL) : 'https://via.placeholder.com/100'} 
                         alt={item.name} 
                         className="w-12 h-10 object-cover rounded-lg border bg-slate-100" 
                       />
@@ -267,14 +271,14 @@ export default function AdminFacilities() {
                       <div className="flex justify-center gap-2">
                         <button 
                           onClick={() => handleOpenEdit(item)} 
-                          className="p-2 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg transition"
+                          className="p-2 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg transition cursor-pointer"
                           title="Edit"
                         >
                           <Edit3 className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => handleDelete(item.id)} 
-                          className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition"
+                          className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition cursor-pointer"
                           title="Hapus"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -296,7 +300,7 @@ export default function AdminFacilities() {
             
             <button 
               onClick={() => setIsModalOpen(false)} 
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -460,7 +464,7 @@ export default function AdminFacilities() {
               {/* SUBMIT BUTTON */}
               <button 
                 type="submit" 
-                className="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-2.5 rounded-xl transition mt-3 shadow-md"
+                className="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-2.5 rounded-xl transition mt-3 shadow-md cursor-pointer"
               >
                 Simpan Fasilitas
               </button>
