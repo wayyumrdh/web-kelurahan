@@ -9,10 +9,7 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  connectTimeout: 10000, // Timeout 10 detik agar tidak menggantung
-  ssl: process.env.MYSQLHOST && process.env.MYSQLHOST !== 'localhost' 
-    ? { rejectUnauthorized: false } 
-    : false
+  connectTimeout: 10000
 });
 
 module.exports = pool;
