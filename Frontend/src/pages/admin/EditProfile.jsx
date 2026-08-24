@@ -14,6 +14,9 @@ import {
 } from 'lucide-react';
 import { villageData } from '../../data/mockData';
 
+// BASE API URL RAILWAY
+const API_BASE_URL = 'https://web-kelurahan-production.up.railway.app';
+
 export default function EditProfile() {
   const [profile, setProfile] = useState({
     name: villageData.name || 'Kelurahan Mallawa',
@@ -48,7 +51,7 @@ export default function EditProfile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch('https://web-kelurahan-production.up.railway.app/api/profile');
+        const response = await fetch(`${API_BASE_URL}/api/profile`);
         if (response.ok) {
           const data = await response.json();
           setProfile({
@@ -118,7 +121,6 @@ export default function EditProfile() {
   const handleOfficialPhotoUpload = async (index, file) => {
     if (!file) return;
 
-    // Batas file gambar maksimal 2 MB
     if (file.size > 2 * 1024 * 1024) {
       alert('Ukuran foto melebihi batas maksimal 2 MB!');
       return;
@@ -128,16 +130,16 @@ export default function EditProfile() {
     formData.append('photo', file);
 
     try {
-      // PERBAIKAN URL: Ditambahkan '/profile' agar sesuai dengan router Express
-      const response = await fetch('http://localhost:5000/api/profile/upload', {
+      // 1. DIBERSIHKAN: Menggunakan API_BASE_URL Railway
+      const response = await fetch(`${API_BASE_URL}/api/profile/upload`, {
         method: 'POST',
         body: formData
       });
 
       if (response.ok) {
         const data = await response.json();
-        // Update URL/filename foto staf yang bersangkutan
-        handleOfficialChange(index, 'photo', data.filename || data.url);
+        // Simpan full URL foto
+        handleOfficialChange(index, 'photo', data.url || `${API_BASE_URL}/uploads/${data.filename}`);
       } else {
         const errData = await response.json().catch(() => ({}));
         alert(errData.message || 'Gagal mengunggah foto aparatur!');
@@ -160,20 +162,22 @@ export default function EditProfile() {
     setProfile({ ...profile, officials: newOfficials });
   };
 
-  // Format preview URL foto (Support local uploads / external URL)
+  // 2. DIBERSIHKAN: Format preview URL foto Railway
   const getPhotoPreview = (photo) => {
     if (!photo) return null;
     if (photo.startsWith('http://') || photo.startsWith('https://')) {
-      return photo;
+      // Hilangkan bug localhost jika telanjur ada di string
+      return photo.replace('http://localhost:5000', API_BASE_URL);
     }
-    return `http://localhost:5000/uploads/${photo}`;
+    return `${API_BASE_URL}/uploads/${photo}`;
   };
 
+  // 3. DIBERSIHKAN: Submit PUT ke Railway
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setSaving(true);
     try {
-      const response = await fetch('http://localhost:5000/api/profile', {
+      const response = await fetch(`${API_BASE_URL}/api/profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(profile)
@@ -224,6 +228,7 @@ export default function EditProfile() {
 
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={handleSubmit}
               disabled={saving}
               className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
