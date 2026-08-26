@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Building2, Lock, LogIn, ArrowLeft, User } from 'lucide-react';
 import { villageData } from '../../data/mockData';
 
@@ -58,7 +58,7 @@ export default function Login() {
       {/* Tombol Kembali ke Portal Warga */}
       <button 
         onClick={() => navigate('/')}
-        className="absolute top-6 left-6 text-slate-400 hover:text-white text-xs flex items-center gap-1.5 transition"
+        className="absolute top-6 left-6 text-slate-400 hover:text-white text-xs flex items-center gap-1.5 transition cursor-pointer"
       >
         <ArrowLeft className="w-4 h-4" />
         <span>Kembali ke Portal Warga</span>
@@ -124,25 +124,14 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-amber-400 hover:bg-amber-300 disabled:bg-slate-700 text-blue-950 font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 text-sm mt-2 shadow-lg"
+            className="w-full bg-amber-400 hover:bg-amber-300 disabled:bg-slate-700 text-blue-950 font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 text-sm mt-2 shadow-lg cursor-pointer"
           >
             <LogIn className="w-4 h-4" />
             <span>{loading ? 'Memeriksa Kredensial...' : 'Masuk ke Dashboard Admin'}</span>
           </button>
         </form>
 
-        {/* Link ke Halaman Register */}
-        <div className="text-center pt-2 border-t border-slate-800">
-          <p className="text-xs text-slate-400">
-            Belum memiliki akun admin?{' '}
-            <Link to="/register" className="text-amber-400 hover:underline font-semibold">
-              Daftar Petugas Baru
-            </Link>
-          </p>
-        </div>
-
       </div>
-
     </div>
   );
 }
